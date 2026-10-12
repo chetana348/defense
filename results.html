@@ -113,29 +113,32 @@ const STEPS = [
  () => { const c=change(S.b,S.f), [vt,cls]=verdict(c), pos=Math.max(0,Math.min(100,(c+20)/100*100*1));
    return `${prog()}
   <div class="eyebrow"><span class="edge-key">Round 3 · The line underneath</span><span>One voxel</span></div>
-  <h2>That number was averaged inside a green outline someone drew by hand. Nudge it.</h2>
+  <h2>That number was averaged inside an outline someone drew by hand. Now a second reader draws it.</h2>
   <div class="pair">
-    <figure><img src="${D.mapB[String(S.b)]}" alt="Baseline map with adjustable outline"><figcaption><span>Before</span><span>${D.means['b'+S.b].toFixed(3)}</span></figcaption></figure>
-    <figure><img src="${D.mapF[String(S.f)]}" alt="Follow-up map with adjustable outline"><figcaption><span>After</span><span>${D.means['f'+S.f].toFixed(3)}</span></figcaption></figure>
+    <figure><img src="${D.mapB[String(S.b)]}" alt="Baseline map with the second reader's outline"><figcaption><span>Before</span><span>${D.means['b'+S.b].toFixed(3)}</span></figcaption></figure>
+    <figure><img src="${D.mapF[String(S.f)]}" alt="Follow-up map with the second reader's outline"><figcaption><span>After</span><span>${D.means['f'+S.f].toFixed(3)}</span></figcaption></figure>
   </div>
   <div class="box">
-    ${sl('b','Before outline',S.b)}${sl('f','After outline',S.f)}
+    <div class="slider"><label for="sd"><span>How far apart are the two readers?</span><output>${S.b===0?'same outline':S.b+' voxel'+(S.b>1?'s':'')}</output></label>
+    <input id="sd" type="range" min="0" max="2" step="1" value="${S.b}" data-d="1" aria-label="Reader disagreement in voxels">
+    <div class="ticks"><span>same</span><span>1 voxel</span><span>2 voxels</span></div></div>
+    <p class="small mute">${S.b===0?'Drag the slider to the right.':'Reader 2 traced the <b>before</b> tumour '+S.b+' voxel'+(S.b>1?'s':'')+' wider and the <b>after</b> tumour '+S.b+' voxel'+(S.b>1?'s':'')+' tighter.'}</p>
     <div class="stat"><span class="big" style="color:var(--${cls})">${fmt(c)}</span><span class="pill ${cls}">${vt}</span></div>
     <div class="bar" aria-hidden="true"><i style="left:calc(${pos}% - 1px)"></i></div>
     <div class="ticks"><span>−20%</span><span>+20% cut</span><span>+80%</span></div>
   </div>
-  <p class="small mute">Each step moves the outline in or out by one voxel, about the width of a pencil line on the screen. Two careful readers routinely disagree by more than this.</p>
-  <p><b>After moving the line, is the treatment working?</b></p>${voteRow(2)}
+  <p class="small mute">One voxel is about the width of a pencil line on the screen. Two expert readers routinely disagree by more than this on pancreatic tumours.</p>
+  ${S.b>0?`<p><b>With the second reader's outline, is the treatment working?</b></p>${voteRow(2)}`:''}
   <button class="next" data-go="4" ${S.v[2]?'':'disabled'}>See what happened</button>`; },
 
  () => `${prog()}
   <div class="eyebrow"><span>Outcome</span><span>Ground truth</span></div>
   <h1>This patient was responding.</h1>
-  <p>The study’s reference outcome for this patient is <b>partial response</b>. The ruler missed it. The map caught it. But the map’s answer swung from <b>${fmt(Math.min(...Object.values(D.grid)))}</b> to <b>${fmt(Math.max(...Object.values(D.grid)))}</b> depending on where two lines were drawn, and one voxel on each line was enough to cross the cut.</p>
+  <p>The study’s reference outcome for this patient is <b>partial response</b>. The ruler missed it. The map caught it. But the map’s answer swung from <b>${fmt(Math.min(...Object.values(D.grid)))}</b> to <b>${fmt(Math.max(...Object.values(D.grid)))}</b> depending on where two lines were drawn. A second reader one voxel wider at baseline and one voxel tighter at follow-up was enough to cross the cut. (Disagreement in the other direction pushes it up instead, to ${fmt(change(-1,1))}.)</p>
   <div class="box">
     <div class="trow"><span>Ruler</span><span class="mute">−22% · stable disease</span><span></span></div>
     <div class="trow"><span>Map</span><span class="mute">${fmt(change(0,0))} · responding</span><span></span></div>
-    <div class="trow"><span>1 voxel</span><span class="mute">${fmt(change(1,-1))} · not responding</span><span></span></div>
+    <div class="trow"><span>2nd reader</span><span class="mute">${fmt(change(1,-1))} · not responding</span><span></span></div>
   </div>
   <p><b>The biology was measurable. The outline was the weak link.</b> My dissertation is about drawing that outline reliably, with as little human effort as possible.</p>
   <p class="small mute">Your answers: ${S.v.map((x,i)=>['Ruler','Map','Line'][i]+': '+(OPTS.find(o=>o[0]===x)||['','—'])[1]).join(' · ')}</p>
@@ -169,6 +172,7 @@ app.addEventListener('click',e=>{
   const g=e.target.closest('[data-go]'); if(g && !g.disabled){S.step=+g.dataset.go; render(); share(); window.scrollTo(0,0);}
 });
 app.addEventListener('input',e=>{
+  const d=e.target.closest('[data-d]'); if(d){ S.b=+d.value; S.f=-S.b; S.moved=true; render(); share(); return; }
   const s=e.target.closest('[data-s]'); if(!s) return;
   S[s.dataset.s]=+s.value; S.moved=true; render(); share();
 });
